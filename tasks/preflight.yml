@@ -1,33 +1,33 @@
 ---
 
 - block:
-    - name: disable ufw
-      ansible.builtin.systemd:
-        name: ufw 
-        state: stopped 
-        enabled: no
-      when: disable_firewall
+  - name: Update OS
+    ansible.builtin.apt:
+      upgrade: dist
+
+  - name: disable ufw
+    ansible.builtin.systemd:
+      name: ufw
+      state: stopped
+      enabled: no
+    when: disable_firewall
+
+  - name: Check if /etc/sysctl.conf exists
+    ansible.builtin.file:
+      path: /etc/sysctl.conf
+      state: touch
+
+  - name: Reboot
+    ansible.builtin.reboot:
+      msg: "Reboot to update kernel"
+      connect_timeout: 5
+      reboot_timeout: 300
+      pre_reboot_delay: 0
+      post_reboot_delay: 30
+      test_command: uptime
   when: ansible_os_family == 'Debian'
 
 - block:
-    - name: Update OS
-      ansible.builtin.apt:
-        upgrade: dist
-
-    - name: Reboot
-      ansible.builtin.reboot:
-        msg: "Reboot to update kernel"
-        connect_timeout: 5
-        reboot_timeout: 300
-        pre_reboot_delay: 0
-        post_reboot_delay: 30
-        test_command: uptime
-
-    - name: Check if /etc/sysctl.conf exists
-      ansible.builtin.file:
-        name: /etc/sysctl.conf
-        state: exists
-
     - name: Install iptables-legacy
       ansible.builtin.dnf: 
         name: 
